@@ -6,6 +6,12 @@ require 'json'
 require 'yaml'
 
 class TreeMap
+  attr_reader :document_supertype
+
+  def initialize(document_supertype:)
+    @document_supertype = document_supertype
+  end
+
   def search(params)
     JSON.parse(HTTP.get("https://www.gov.uk/api/search.json?#{params.to_param}"))
   end
@@ -14,15 +20,15 @@ class TreeMap
     output = [
       "id,value",
       "govuk",
-      "govuk.not-part-of-job-story-type",
       "govuk.missing_document_type,#{missing_count}",
+      "govuk.#{other}",
     ]
 
     uncategorised.each do |document_type|
-      output << "govuk.not-part-of-job-story-type.#{document_type},#{document_type_counts[document_type]}"
+      output << "govuk.#{other}.#{document_type},#{document_type_counts[document_type]}"
     end
 
-    supertypes["user_need_document_supertype"]["items"].each do |supertype|
+    supertypes[document_supertype]["items"].each do |supertype|
       output << "govuk.#{supertype["id"]}"
 
       supertype["document_types"].each do |document_type|
@@ -31,6 +37,10 @@ class TreeMap
     end
 
     output.join("\n")
+  end
+
+  def other
+    supertypes[document_supertype]["default"]
   end
 
   def document_type_counts
@@ -56,17 +66,22 @@ class TreeMap
   end
 
   def uncategorised
-    categorised = supertypes["user_need_document_supertype"]["items"].map { |supertype| supertype["document_types"] }.flatten
+    categorised = supertypes[document_supertype]["items"].map { |supertype| supertype["document_types"] }.flatten
     document_type_counts.keys - categorised
   end
 end
 
 get '/' do
-  erb :index
+  unless params[:supertype]
+    redirect '?supertype=user_need_document_supertype'
+  end
+
+  map = TreeMap.new(document_supertype: params[:supertype])
+  erb :index, locals: { map: map }
 end
 
 get '/treemap.csv' do
   content_type :text
-  map = TreeMap.new
+  map = TreeMap.new(document_supertype: params[:supertype])
   map.to_csv
 end

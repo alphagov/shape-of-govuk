@@ -1,4 +1,20 @@
-<h1>GOV.UK job story document types</h1>
+<h1>GOV.UK Supertypes</h1>
+
+<ul>
+<% map.supertypes.each do |id, supertype| %>
+  <li>
+    <% if params[:supertype] == id %>
+      <strong><%= supertype["name"] %></strong>
+    <% else %>
+      <a href='?supertype=<%= id %>'><%= supertype["name"] %></a>
+    <% end %>
+
+    &mdash; <%= supertype["description"] %>
+  </li>
+<% end %>
+</ul>
+
+<hr/>
 
 <style>
 
@@ -43,7 +59,7 @@ var treemap = d3.treemap()
     .paddingInner(1)
     .round(true);
 
-d3.csv("treemap.csv", function(error, data) {
+d3.csv("treemap.csv?supertype=<%= params[:supertype] %>", function(error, data) {
   if (error) throw error;
 
   var root = stratify(data)

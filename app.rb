@@ -14,7 +14,8 @@ class TreeMap
     output = [
       "id,value",
       "govuk",
-      "govuk.not-part-of-job-story-type"
+      "govuk.not-part-of-job-story-type",
+      "govuk.missing_document_type,#{missing_count}",
     ]
 
     uncategorised.each do |document_type|
@@ -35,12 +36,19 @@ class TreeMap
   def document_type_counts
     @counts ||= begin
       hash = {}
-      query = search(facet_content_store_document_type: 100)
-      query["facets"]["content_store_document_type"]["options"].each do |o|
+      facet_query["facets"]["content_store_document_type"]["options"].each do |o|
         hash[o["value"]["slug"]] = o["documents"]
       end
       hash
     end
+  end
+
+  def missing_count
+    facet_query["facets"]["content_store_document_type"]["documents_with_no_value"]
+  end
+
+  def facet_query
+    @facet_query ||= search(facet_content_store_document_type: 100)
   end
 
   def supertypes

@@ -62,7 +62,7 @@ class TreeMap
   end
 
   def supertypes
-    @supertypes ||= YAML.load(HTTP.get("https://raw.githubusercontent.com/alphagov/govuk_document_types/add-super-type/data/supertypes.yml"))
+    @supertypes ||= YAML.load(HTTP.get("https://raw.githubusercontent.com/alphagov/govuk_document_types/master/data/supertypes.yml"))
   end
 
   def uncategorised
